@@ -1,0 +1,19 @@
+// Fonts
+@import url('https://fonts.googleapis.com/css?family=Nunito');
+
+// Variables
+@import 'variables';
+
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+
+// fontawesome
+@import "~@fortawesome/fontawesome-free/css/all.css";
+
+// toastr
+
+@import "~toastr/toastr";
+
+.toast-top-right {
+  top: 70px;
+}
