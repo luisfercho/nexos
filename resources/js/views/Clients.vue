@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="card">
-            <div class="card-header d-flex flex-row justify-content-between align-items-center">
+            <div class="card-header d-flex  flex-column flex-lg-row  justify-content-between align-items-center">
                 <h4 class="m-0">
                     Clientes
                 </h4>

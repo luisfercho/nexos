@@ -41,10 +41,12 @@ class UsersController extends Controller
 
             if(isset($user->id)){
 
-                $user->name = $request->name;
-                $user->email = $request->email;
-
-                //$user->password  = Hash::make($request->password);
+                if($request->modal_type == 2){
+                    $user->name = $request->name;
+                    $user->email = $request->email;
+                }else{
+                    $user->password  = Hash::make($request->password);
+                }
 
                 $user->save();
 
@@ -75,6 +77,59 @@ class UsersController extends Controller
         return response()->json(
             $respuesta,
             $respuesta["success"]?200:422
+        );
+    }
+
+    public function delete($id){
+        $user = User::find($id);
+
+        if(isset($user->id)){
+            if(count($user->transactions)>0){
+                $success = false;
+                $message = "El usuario no puede ser eliminado, tiene transacciones asociadas.";
+            }else{
+                $user->delete();
+                $success = true;
+                $message = "Usuario eliminado correctamente";
+            }
+        }else{
+            $success = false;
+            $message = "El usuario no ha sido encontrado.";
+        }
+        $respuesta = [
+            "success"=> $success,
+            "message"=>$message
+        ];
+        return response()->json(
+            $respuesta
+        );
+    }
+
+    public function togleStatus($id){
+        $user = User::find($id);
+
+        if(isset($user->id)){
+            if($user->status == 1){
+                $user->status = 2;
+                $message = "Usuario inactivado correctamente.";
+            }else{
+                $user->status = 1;
+                $message = "Usuario activado correctamente";
+            }
+
+            $user->save();
+
+            $success = true;
+        }else{
+            $success = false;
+            $message = "El usuario no ha sido encontrado.";
+        }
+        $respuesta = [
+            "success"=> $success,
+            "message"=>$message
+        ];
+        return response()->json(
+            $respuesta
         );
     }
 }

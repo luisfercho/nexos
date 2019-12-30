@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="card">
-            <div class="card-header d-flex flex-row justify-content-between align-items-center">
+            <div class="card-header d-flex  flex-column flex-lg-row justify-content-between align-items-center">
                 <h4 class="m-0">
                     Usuarios
                 </h4>
@@ -22,14 +22,28 @@
                         <tr v-for="(user,i) in data.data">
                             <td v-text="user.name"></td>
                             <td v-text="user.email"></td>
+                            <td>
+                                {{ user.status==1?"Activo":"Inactivo" }}
+                            </td>
 
                             <td class="p-0 m-0" style="width:3%">
-                                <button class="btn btn-link text-dark btn-tooltip" title="Editar" @click="editUser(i)">
+                                <button class="btn btn-link text-dark btn-tooltip" title="Editar" @click="editUser(i)"
+                                        :disabled="user.status==2">
                                     <i class="fa fa-pencil-alt"></i>
                                 </button>
                             </td>
                             <td class="p-0 m-0" style="width:3%">
-                                <button class="btn btn-link text-dark btn-tooltip" title="Eliminar" @click="confirmDelete(i)">
+                                <button class="btn btn-link text-dark btn-tooltip" title="Cambiar Clave" @click="editPass(i)" >
+                                    <i class="fa fa-lock"></i>
+                                </button>
+                            </td>
+                            <td class="p-0 m-0" style="width:3%">
+                                <button class="btn btn-link text-dark btn-tooltip" :data-title="user.status==1?'Inactivar':'Activar'" @click="confirmToggleStatus(i)" >
+                                    <i :class="user.status==1?'fa fa-ban':'fa fa-check'"></i>
+                                </button>
+                            </td>
+                            <td class="p-0 m-0" style="width:3%">
+                                <button class="btn btn-link text-dark btn-tooltip" title="Eliminar" @click="confirmDelete(i)" :disabled="user.status==2">
                                     <i class="fa fa-trash-alt"></i>
                                 </button>
                             </td>
@@ -65,23 +79,23 @@
                     </div>
                     <div class="modal-body">
                         <form action="#" autocomplete="OFF">
-                            <div class="form-group">
+                            <div v-if="user.modal_type!=3" class="form-group">
                                 <b>Nombre:</b>
                                 <input type="text" class="form-control " id="nombre" placeholder="Nombre" name="nombre" v-model="user.name" v-validate="'required'" :class="{'is-invalid': errors.has('nombre') && submitted }">
                                 <span v-show="errors.has('nombre')" class="invalid-feedback">{{ errors.first('nombre') }}</span>
 
                             </div>
-                            <div class="form-group">
+                            <div v-if="user.modal_type!=3" class="form-group">
                                 <b>Email:</b>
                                 <input type="text" class="form-control" id="email" placeholder="Email" name="email" v-model="user.email" v-validate="'required|email'" :class="{'is-invalid': errors.has('email') && submitted }"  autocomplete="off">
                                 <span v-show="errors.has('email')" class="invalid-feedback">{{ errors.first('email') }}</span>
                             </div>
-                            <div class="form-group">
+                            <div v-if="user.modal_type!=2"  class="form-group">
                                 <b>Contraseña:</b>
-                                <input type="password" class="form-control" id="password" placeholder="Teléfono" name="password" v-model="user.password" v-validate="'required'" :class="{'is-invalid': errors.has('telefono') && submitted }"  autocomplete="off">
-                                <span v-show="errors.has('telefono')" class="invalid-feedback">{{ errors.first('telefono') }}</span>
+                                <input type="password" class="form-control" id="password" placeholder="Contraseña" name="password" v-model="user.password" v-validate="'required'" :class="{'is-invalid': errors.has('password') && submitted }"  autocomplete="off">
+                                <span v-show="errors.has('password')" class="invalid-feedback">{{ errors.first('password') }}</span>
                             </div>
-                            <div class="form-group">
+                            <div v-if="user.modal_type!=2" class="form-group">
                                 <b>Repetir Contraseña:</b>
                                 <input type="password" class="form-control" id="password_confirm" placeholder="Repetir Contraseña" name="password_confirm" v-model="user.password_confirm" v-validate="'required'" :class="{'is-invalid': errors.has('password_confirm') && submitted }"  autocomplete="off">
                                 <span v-show="errors.has('password_confirm')" class="invalid-feedback">{{ errors.first('password_confirm') }}</span>
@@ -115,12 +129,15 @@
                 titles:[
                     {label:"Nombre",cols:1},
                     {label:"E-mail",cols:1},
-                    {label:"Acciones",cols:3}
+                    {label:"Estado",cols:1},
+                    {label:"Acciones",cols:4}
                 ],
                 data: {
                     data:[]
                 },
-                user:{}
+                user:{
+                    id:0
+                }
             }
         },
         mounted(){
@@ -149,17 +166,27 @@
                     })
             },
             clearData(){
-                this.user = {};
+                this.user = {
+                    id:0
+                };
             },
             addUser(){
                 this.clearData();
                 $("#modalUsersTitle").text("Añadir Usuario");
+                this.user.modal_type = 1;
                 this.openModal(1);
             },
+            editPass(i){
+                this.user = this.data.data[i];
+                $("#modalUsersTitle").text("Editar Contraseña");
+                this.user.modal_type = 3;
+                this.openModal()
+            },
             editUser(i){
-                this.client = this.data.data[i];
-                $("#modalClientsTitle").text("Editar Usuario");
-                this.openModal(2,i)
+                this.user = this.data.data[i];
+                $("#modalUsersTitle").text("Editar Usuario");
+                this.user.modal_type = 2;
+                this.openModal()
             },
             openModal(){
                 this.submitted = false;
@@ -170,6 +197,10 @@
                 this.$validator.validateAll().then((result) => {
                     if (result){
                         let $self = this;
+                        if($self.user.password != $self.user.password_confirm){
+                            createToastr("warning","Las contraseñas no coinciden.");
+                            return false;
+                        }
                         axios.post('/api/users',$self.user,{
                             'headers': { 'Authorization': 'Bearer '+localStorage.getItem("access_token") }
                         }).then(response => {
@@ -183,23 +214,23 @@
                                 createToastr("warning",response.data.message);
                             }
                         })
-                            .catch(err => {
-                                this.loading = false;
-                                let dataError = err.response;
-                                let message;
-                                if(dataError.status == 401){
-                                    message = "Acceso denegado";
-                                }else{
-                                    message = dataError.data.message;
-                                }
-                                createToastr("warning",message);
-                            })
+                        .catch(err => {
+                            this.loading = false;
+                            let dataError = err.response;
+                            let message;
+                            if(dataError.status == 401){
+                                message = "Acceso denegado";
+                            }else{
+                                message = dataError.data.message;
+                            }
+                            createToastr("warning",message);
+                        })
                     }
                 });
             },
             confirmDelete(i){
                 Swal.fire({
-                    title: 'Se eliminara el cliente "' + this.data.data[i].name + '"',
+                    title: 'Se eliminara el usuario "' + this.data.data[i].name + '"',
                     text: "Deseas continuar?",
                     icon: 'warning',
                     showCancelButton: true,
@@ -216,7 +247,53 @@
             },
             deleteClient(i){
                 let $self = this;
-                axios.delete('/api/clients/'+$self.data.data[i].id,
+                axios.delete('/api/users/'+$self.data.data[i].id,
+                    {'headers': { 'Authorization': 'Bearer '+localStorage.getItem("access_token") }}
+                )
+                    .then(response => {
+                        if(response.data.success){
+                            $self.getResults();
+                            createToastr("success",response.data.message);
+                        }else{
+                            createToastr("warning",response.data.message);
+                        }
+                    })
+                    .catch(err => {
+                        this.loading = false;
+                        let dataError = err.response;
+                        let message;
+                        if(dataError.status == 401){
+                            message = "Acceso denegado";
+                        }else{
+                            message = dataError.data.message;
+                        }
+                        createToastr("warning",message);
+                    })
+            },
+            confirmToggleStatus(i){
+                let status = this.data.data[i].status;
+                let title = status==1?"Inactivar el usuario ":"Activar el usuario ";
+                    title +=this.data.data[i].name+" ?";
+                let button = "Si, "+(status==1?"Inactivar":"Activar");
+                Swal.fire({
+                    title: title,
+                    text: "Deseas continuar?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: button,
+                    cancelButtonColor: '#d33',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    showLoaderOnConfirm: true ,
+                    preConfirm: () => {
+                        this.toggleStatus(i);
+                    }
+                });
+            },
+            toggleStatus(i){
+                let $self = this;
+                axios.put('/api/users/'+$self.data.data[i].id,{},
                     {'headers': { 'Authorization': 'Bearer '+localStorage.getItem("access_token") }}
                 )
                     .then(response => {

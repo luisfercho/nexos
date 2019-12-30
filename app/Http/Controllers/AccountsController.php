@@ -4,6 +4,7 @@ namespace Nexos\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Nexos\Account;
 use Nexos\Customer;
@@ -88,7 +89,7 @@ class AccountsController extends Controller
                 "active"=>$active,
                 "status"=>1,
                 "balance"=>$balance,
-                'password'=>substr($client->document, -4, 4)
+                'password'=>Hash::make(substr($client->document, -4, 4))
             ]);
 
             $client->accounts()->save($account);
@@ -145,5 +146,21 @@ class AccountsController extends Controller
             return self::getRandomNumber();
         }
         return $number;
+    }
+
+    public function list(Request $request){
+        if(isset($request->all()["query"])){
+            $searchTerm = $request->all()["query"];
+            $accounts = Account::where("number",'LIKE',"%{$searchTerm}%")
+                ->select([
+                    "accounts.id",
+                    "accounts.number",
+                ])
+                ->get();
+
+            return response()->json(
+                $accounts
+            );
+        }
     }
 }

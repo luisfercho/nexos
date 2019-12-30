@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="card">
-            <div class="card-header d-flex flex-row justify-content-between align-items-center">
+            <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-center">
                 <h4 class="m-0">
                     Transacciones {{ !loading&&account_id>0?" de la cuenta "+account.number:"" }}
                 </h4>
@@ -26,7 +26,16 @@
                                     <span v-else>Consignación</span>
                                 </td>
                                 <td>{{ transaction.date }}</td>
-                                <td>${{ transaction.amount | numFormat('0,0[.]00') }}</td>
+                                <td>
+                                    <span v-if="transaction.type==1">
+                                        <i class="fa fa-minus text-danger"></i>
+                                    </span>
+                                    <span v-else>
+                                        <i class="fa fa-plus text-success"></i>
+                                    </span>
+                                    ${{ transaction.amount | numFormat('0,0[.]00') }}
+                                </td>
+                                <td>{{ transaction.user }}</td>
                                 <td>{{ transaction.description }}</td>
                             </tr>
                         </tbody>
@@ -61,9 +70,6 @@
                     <div class="modal-body">
                         <form action="#">
                             <div class="form-group">
-                                <b>Cajero:</b>
-                            </div>
-                            <div class="form-group">
                                 <b>Numero de cuenta:</b>
                                 <template v-if="typeof this.$route.params.account_id != 'undefined'">
                                     <input type="text" class="form-control " id="numero" placeholder="Numero de cuenta" name="nombre" v-model="account.number" v-validate="'required'" :class="{'is-invalid': errors.has('numero') && submitted }" readonly >
@@ -75,17 +81,17 @@
                                             v-model="account"
                                             :items="itemsAccount"
                                             :loading="loadingAccount"
-                                            item-text="name"
+                                            item-text="number"
                                             @search="onSearchAccount"
                                             :error-message="errorMessageAccount"
                                             :successful="!!(!errorMessageAccount && account)">
                                         <template slot="no-data">
-                                            {{ noDataAccount?"No se encontro el cliente.":"Ingrese el nombre del cliente"}}
+                                            {{ noDataAccount?"No se encontro la cuenta.":"Ingrese el numero de la cuenta"}}
                                         </template>
                                         <template #item="{ item }">
                                             <div class="item">
                                                 <div>
-                                                    <span class="item-name"> {{ item.name }} </span>
+                                                    <span class="item-name"> {{ item.number }} </span>
                                                 </div>
                                             </div>
                                         </template>
@@ -102,9 +108,19 @@
                                 <span v-show="errors.has('tipo')" class="invalid-feedback">{{ errors.first('tipo') }}</span>
                             </div>
                             <div class="form-group">
+                                <b>Monto:</b>
+                                <input type="number" class="form-control" id="monto" placeholder="Monto" name="monto" v-model="transaction.amount" :class="{'is-invalid': errors.has('monto') && submitted }" v-validate="'required'" >
+                                <span v-show="errors.has('monto')" class="invalid-feedback">{{ errors.first('monto') }}</span>
+                            </div>
+                            <div class="form-group">
                                 <b>Clave:</b>
-                                <input type="password" class="form-control " id="clave" placeholder="Clave" name="clave" v-model="transaction.clave" :class="{'is-invalid': errors.has('clave') && submitted }" v-validate="'required'"  length="4">
+                                <input type="password" class="form-control " id="clave" placeholder="Clave" name="clave" v-model="transaction.password" :class="{'is-invalid': errors.has('clave') && submitted }" v-validate="'required'"  minlength="4">
                                 <span v-show="errors.has('clave')" class="invalid-feedback">{{ errors.first('clave') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <b>Descripción:</b>
+                                <textarea class="form-control " id="descripcion" placeholder="Clave" name="descripcion" v-model="transaction.description" :class="{'is-invalid': errors.has('descripcion') && submitted }" v-validate="'required'" ></textarea>
+                                <span v-show="errors.has('descripcion')" class="invalid-feedback">{{ errors.first('descripcion') }}</span>
                             </div>
                         </form>
                     </div>
@@ -136,12 +152,14 @@
             return {
                 loading:true,
                 hideAcount:false,
+                submitted:false,
                 account_id:0,
                 titles:[
                     {label:"Cuenta",cols:1,checkShow:true},
                     {label:"Tipo",cols:1,checkShow:false},
                     {label:"Fecha",cols:1,checkShow:false},
                     {label:"Valor",cols:1,checkShow:false},
+                    {label:"Cajero",cols:1,checkShow:false},
                     {label:"Descripción",cols:1,checkShow:false}
                 ],
                 account:{
@@ -156,7 +174,7 @@
                 },
 
                 loadingAccount:false,
-                timeoutCustomerId: null,
+                timeoutAccountId: null,
                 noDataAccount: false,
                 itemsAccount:[],
                 errorMessageAccount: null
@@ -198,10 +216,10 @@
                     });
             },
             clearData(){
-                /*this.account = {
-                    id:0,
-                    name:""
-                };*/
+                this.submitted = false;
+                this.transaction = {
+                    type:""
+                };
             },
             addTransaction(){
                 this.clearData();
@@ -213,10 +231,70 @@
                 $("#modalTransactions").modal("show");
             },
             sendData(){
-
+                this.submitted = true;
+                this.$validator.validateAll().then((result) => {
+                    if (result){
+                        let $self = this;
+                        axios.post('/api/transactions',{
+                            account_id:$self.account.id,
+                            type:$self.transaction.type,
+                            amount:$self.transaction.amount,
+                            password:$self.transaction.password,
+                            description:$self.transaction.description
+                        },{
+                            'headers': { 'Authorization': 'Bearer '+localStorage.getItem("access_token") }
+                        }).then(response => {
+                            if(response.data.success){
+                                $self.clearData();
+                                $self.getResults();
+                                createToastr("siccess",response.data.message);
+                            }else{
+                                createToastr("warning",response.data.message);
+                            }
+                        })
+                        .catch(err => {
+                            this.loading = false;
+                            let dataError = err.response;
+                            let message;
+                            if(dataError.status == 401){
+                                message = "Acceso denegado";
+                            }else{
+                                message = dataError.data.message;
+                            }
+                            createToastr("warning",message);
+                        })
+                    }
+                });
             },
-            onSearchAccount(){
 
+            async getDataAjax(search){
+                let res = await axios.get(`/api/transactions/getAccounts?query=${search}`,{
+                    'headers': { 'Authorization': 'Bearer '+localStorage.getItem("access_token") }
+                });
+                console.log(res.data);
+                return res.data;
+            },
+
+            onSearchAccount(search) {
+                const lettersLimit = 2;
+
+                this.noDataAccount = false;
+                if (search.length < lettersLimit) {
+                    this.itemsAccount = [];
+                    this.loadingAccount = false;
+                    return;
+                }
+                this.loadingAccount = true;
+
+                clearTimeout(this.timeoutAccountId);
+                this.timeoutAccountId = setTimeout(async () => {
+
+                    this.itemsAccount = await this.getDataAjax(search);
+                    this.loadingAccount = false;
+
+                    if (!this.itemsAccount.length) this.noDataAccount = true;
+
+                }, 500);
             }
         }
     }

@@ -21,6 +21,10 @@ Route::middleware('auth:api')->get('/users', 'UsersController@index');
 
 Route::middleware('auth:api')->post('/users', 'UsersController@store');
 
+Route::middleware('auth:api')->delete('/users/{user_id}', 'UsersController@delete');
+
+Route::middleware('auth:api')->put('/users/{user_id}', 'UsersController@togleStatus');
+
 Route::middleware('auth:api')->get('/clients', 'ClientsController@index');
 
 Route::middleware('auth:api')->post('/clients', 'ClientsController@store');
@@ -35,7 +39,11 @@ Route::middleware('auth:api')->post('/accounts', 'AccountsController@store');
 
 Route::middleware('auth:api')->delete('/accounts/{id}', 'AccountsController@delete');
 
+Route::middleware('auth:api')->get('/transactions/getAccounts', 'AccountsController@list');
+
 Route::middleware('auth:api')->get('/transactions/{id}', 'TransactionsController@index');
+
+Route::middleware('auth:api')->post('/transactions', 'TransactionsController@store');
 
 Route::post('/login', 'AuthController@login');
 
