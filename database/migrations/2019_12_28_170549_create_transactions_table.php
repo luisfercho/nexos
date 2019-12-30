@@ -20,8 +20,8 @@ class CreateTransactionsTable extends Migration
             $table->decimal('amount',18,2);
             $table->text('description');
 
-            $table->unsignedBigInteger('customer_id');
-            $table->foreign('customer_id')->references('id')->on('customers');
+            $table->unsignedBigInteger('cashier_id');
+            $table->foreign('cashier_id')->references('id')->on('cashiers');
 
             $table->unsignedBigInteger('account_id');
             $table->foreign('account_id')->references('id')->on('accounts');

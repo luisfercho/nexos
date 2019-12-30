@@ -27,6 +27,7 @@ class CreateAccountsTable extends Migration
             $table->foreign('customer_id')->references('id')->on('customers');
 
             $table->integer('status')->default(1)->comment("1->active\n2->inactive");
+            $table->integer('active')->default(2)->comment("1->active\n2->inactive");
             $table->dateTime('inactivity_date')->nullable();
             $table->timestamps();
         });

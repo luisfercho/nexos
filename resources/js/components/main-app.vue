@@ -20,6 +20,18 @@
                         Clientes
                     </router-link>
                 </li>
+                <li class="nav-item">
+                    <router-link class="nav-link" :to="{name:'accounts'}">
+                        <i class="fa fa-dollar-sign"></i>
+                        Cuentas
+                    </router-link>
+                </li>
+                <li class="nav-item">
+                    <router-link class="nav-link" :to="{name:'transactions'}">
+                        <i class="fa fa-exchange-alt"></i>
+                        Transacciones
+                    </router-link>
+                </li>
             </ul>
             <ul class="navbar-nav my-2 my-lg-0">
                 <li class="nav-item">

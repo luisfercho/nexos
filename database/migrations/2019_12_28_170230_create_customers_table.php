@@ -19,6 +19,7 @@ class CreateCustomersTable extends Migration
             $table->string('last_name');
             $table->string('document');
             $table->integer('document_type');
+            $table->integer('status')->default(1)->comment("1->active\n2->inactive");
             $table->string('address');
             $table->string('cellphone',50);
             $table->string('email',250);

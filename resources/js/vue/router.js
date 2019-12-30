@@ -9,6 +9,8 @@ import Login from '../views/Login'
 import Logout from '../views/Logout'
 import Dashboard from '../views/Dashboard'
 import Clients from '../views/Clients'
+import Accounts from "../views/Accounts";
+import Transactions from "../views/Transactions";
 
 // router
 const  router = new VueRouter({
@@ -39,6 +41,22 @@ const  router = new VueRouter({
             path:'/clients',
             name:'clients',
             component:Clients,
+            meta:{
+                requiresAuth: true
+            }
+        },
+        {
+            path:'/accounts/:client_id?',
+            name:'accounts',
+            component:Accounts,
+            meta:{
+                requiresAuth: true
+            }
+        },
+        {
+            path:'/transactions/:account_id?',
+            name:'transactions',
+            component:Transactions,
             meta:{
                 requiresAuth: true
             }

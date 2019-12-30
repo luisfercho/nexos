@@ -10,21 +10,30 @@
                     Agregar Cliente
                 </button>
             </div>
-            <div class="card-body">
+            <div class="card-body table-responsive">
                 <template v-if="data.data.length > 0">
                     <table  class="table table-sm table-striped  table-bordered">
                         <thead>
-                        <th v-for="title in titles" :colspan="title.cols">
+                            <th v-for="title in titles" :colspan="title.cols">
                             {{ title.label }}
                         </th>
                         </thead>
                         <tbody>
                         <tr v-for="(client,i) in data.data">
                             <td v-text="client.name+' '+client.last_name"></td>
-                            <td v-text="client.document"></td>
+                            <td>
+                                <span v-show="client.document_type == 1">C.C.</span>
+                                <span v-show="client.document_type == 2">C.E.</span>
+                                <span v-show="client.document_type == 3">P.te</span>
+                                <span v-show="client.document_type == 4">Otro</span>
+                                {{ client.document }}
+                            </td>
                             <td v-text="client.address"></td>
                             <td v-text="client.cellphone"></td>
                             <td v-text="client.email"></td>
+                            <td>
+                                {{ client.status==1?"Activo":"Inactivo"}}
+                            </td>
 
                             <td class="p-0 m-0" style="width:3%">
                                 <button class="btn btn-link text-dark btn-tooltip" title="Editar" @click="editClient(i)">
@@ -32,8 +41,13 @@
                                 </button>
                             </td>
                             <td class="p-0 m-0" style="width:3%">
-                                <button class="btn btn-link text-dark btn-tooltip" title="Eliminar">
-                                    <i class="fa fa-times"></i>
+                                <router-link class="btn btn-link text-dark btn-tooltip" :to="{name:'accounts',params:{client_id:client.id}}" title="Cuentas">
+                                    <i class="fa fa-dollar-sign"></i>
+                                </router-link>
+                            </td>
+                            <td class="p-0 m-0" style="width:3%">
+                                <button class="btn btn-link text-dark btn-tooltip" title="Eliminar" @click="confirmDelete(i)">
+                                    <i class="fa fa-trash-alt"></i>
                                 </button>
                             </td>
                         </tr>
@@ -85,10 +99,10 @@
                                 <div class="input-group mb-3">
                                     <div class="input-group-prepend">
                                         <select name="tipo_documento" id="tipo_documento" v-model="client.document_type" class="form-control">
-                                            <option value="1" selected>C.C</option>
-                                            <option value="2">C.T</option>
-                                            <option value="3">P.te</option>
-                                            <option value="4">Otro</option>
+                                            <option value="1" selected>C.C.</option>
+                                            <option value="2">C.E.</option>
+                                            <option value="3">T.I.</option>
+                                            <option value="4">Otro.</option>
                                         </select>
                                     </div>
                                     <input type="text" class="form-control " id="documento" placeholder="Documento" name="documento" v-model="client.document" v-validate="'required'" :class="{'is-invalid': errors.has('documento') && submitted }" minlength="4">
@@ -106,12 +120,12 @@
                             <div class="form-group">
                                 <b>Tel&eacute;fono:</b>
                                 <input type="number" class="form-control" id="telefono" placeholder="Teléfono" name="telefono" v-model="client.cellphone" v-validate="'required'" :class="{'is-invalid': errors.has('telefono') && submitted }"  autocomplete="off">
-                                <span v-show="errors.has('email')" class="invalid-feedback">{{ errors.first('telefono') }}</span>
+                                <span v-show="errors.has('telefono')" class="invalid-feedback">{{ errors.first('telefono') }}</span>
                             </div>
                             <div class="form-group">
                                 <b>Dirección:</b>
                                 <input type="text" class="form-control" id="address" placeholder="Dirección" name="direccion" v-model="client.address" v-validate="'required'" :class="{'is-invalid': errors.has('direccion') && submitted }"  autocomplete="off">
-                                <span v-show="errors.has('email')" class="invalid-feedback">{{ errors.first('direccion') }}</span>
+                                <span v-show="errors.has('direccion')" class="invalid-feedback">{{ errors.first('direccion') }}</span>
                             </div>
                         </form>
                     </div>
@@ -132,6 +146,7 @@
 </template>
 
 <script>
+    import Swal from 'sweetalert2'
     export default {
         name: "Clients",
         data(){
@@ -144,7 +159,8 @@
                     {label:"Dirección",cols:1},
                     {label:"Teléfono",cols:1},
                     {label:"E-mail",cols:1},
-                    {label:"Acciones",cols:2}
+                    {label:"Estado",cols:1},
+                    {label:"Acciones",cols:3}
                 ],
                 data: {
                     data:[]
@@ -195,9 +211,27 @@
                 $("#modalClientsTitle").text("Editar Cliente");
                 this.openModal(2,i)
             },
-            openModal(type,i=false){
+            openModal(){
                 this.submitted = false;
                 $("#modalClients").modal("show");
+            },
+            redirectToAccounts(client_id){
+                $("#modalClients").modal("hide");
+                Swal.fire({
+                    title: 'Cliente creado correctamente',
+                    text: "Deseas ver sus cuentas de ahorros?",
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Si, ver',
+                    cancelButtonColor: '#d33',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    showLoaderOnConfirm: true ,
+                    preConfirm: () => {
+                        this.$router.push('/accounts/'+client_id);
+                    }
+                });
             },
             sendData(){
                 this.submitted = true;
@@ -209,7 +243,9 @@
                         }).then(response => {
                             if(response.data.success){
                                 if($self.client.id < 1){
+                                    let client_id = response.data.client_id;
                                     $self.clearData();
+                                    $self.redirectToAccounts(client_id);
                                 }
                                 $self.getResults();
                                 createToastr("siccess",response.data.message);
@@ -230,6 +266,48 @@
                         })
                     }
                 });
+            },
+            confirmDelete(i){
+                Swal.fire({
+                    title: 'Se eliminara el cliente "' + this.data.data[i].name + '"',
+                    text: "Deseas continuar?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Si, borrar',
+                    cancelButtonColor: '#d33',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    showLoaderOnConfirm: true ,
+                    preConfirm: () => {
+                        this.deleteClient(i);
+                    }
+                });
+            },
+            deleteClient(i){
+                let $self = this;
+                axios.delete('/api/clients/'+$self.data.data[i].id,
+                    {'headers': { 'Authorization': 'Bearer '+localStorage.getItem("access_token") }}
+                )
+                    .then(response => {
+                        if(response.data.success){
+                            $self.getResults();
+                            createToastr("success",response.data.message);
+                        }else{
+                            createToastr("warning",response.data.message);
+                        }
+                    })
+                    .catch(err => {
+                        this.loading = false;
+                        let dataError = err.response;
+                        let message;
+                        if(dataError.status == 401){
+                            message = "Acceso denegado";
+                        }else{
+                            message = dataError.data.message;
+                        }
+                        createToastr("warning",message);
+                    })
             }
         }
     }

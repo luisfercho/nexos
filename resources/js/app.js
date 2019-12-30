@@ -52,7 +52,15 @@ Vue.component(
 Vue.component('pagination', require('laravel-vue-pagination'));
 
 router.beforeEach((to, from, next) => {
+    $(".tooltip").remove();
     if (to.matched.some(record => record.meta.requiresAuth)) {
+        if(!("access_token" in localStorage)){
+            store.dispatch("destroyToken").then(response => {
+                next({
+                    name: 'login',
+                })
+            });
+        }
         // verifica si esta logueado o no
         if (!store.getters.loggedIn) {
             next({
@@ -103,6 +111,16 @@ window.createToastr = (type,txt) =>{
         toastr.success(txt,"Exito");
     }
 }
+
+import numeral from 'numeral';
+import numFormat from 'vue-filter-number-format';
+
+Vue.filter('numFormat', numFormat(numeral));
+
+import { CoolSelectPlugin } from "vue-cool-select";
+import("vue-cool-select/dist/themes/bootstrap.css");
+
+Vue.use(CoolSelectPlugin);
 
 const app = new Vue({
     el: '#app',
