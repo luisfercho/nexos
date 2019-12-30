@@ -5,9 +5,11 @@ namespace Nexos\Http\Controllers;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Nexos\Account;
 use Nexos\Customer;
+use Nexos\Mail\AccountCreatedEmail;
 
 class AccountsController extends Controller
 {

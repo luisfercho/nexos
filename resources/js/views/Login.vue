@@ -45,7 +45,7 @@
                         password: this.password
                     })
                     .then(response => {
-                        this.$router.push({ name: "dashboard" });
+                        this.$router.push({ name: "transactions" });
                     })
                     .catch(error => {
                         this.error = error.response.data;

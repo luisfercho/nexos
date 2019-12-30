@@ -3734,7 +3734,7 @@ __webpack_require__.r(__webpack_exports__);
         password: this.password
       }).then(function (response) {
         _this.$router.push({
-          name: "dashboard"
+          name: "transactions"
         });
       })["catch"](function (error) {
         _this.error = error.response.data;
@@ -81656,13 +81656,6 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
     path: '/users',
     name: 'users',
     component: _views_Users__WEBPACK_IMPORTED_MODULE_6__["default"],
-    meta: {
-      requiresAuth: true
-    }
-  }, {
-    path: '/dashboard',
-    name: 'dashboard',
-    component: _views_Dashboard__WEBPACK_IMPORTED_MODULE_5__["default"],
     meta: {
       requiresAuth: true
     }

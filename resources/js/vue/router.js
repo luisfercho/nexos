@@ -37,13 +37,6 @@ const  router = new VueRouter({
                 requiresAuth: true,
             }
         },{
-            path: '/dashboard',
-            name: 'dashboard',
-            component: Dashboard,
-            meta: {
-                requiresAuth: true,
-            }
-        },{
             path:'/clients',
             name:'clients',
             component:Clients,
