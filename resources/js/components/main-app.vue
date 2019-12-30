@@ -15,6 +15,12 @@
                     </router-link>
                 </li>
                 <li class="nav-item">
+                    <router-link class="nav-link" :to="{name:'users'}">
+                        <i class="fa fa-user-circle"></i>
+                        Usuarios
+                    </router-link>
+                </li>
+                <li class="nav-item">
                     <router-link class="nav-link" :to="{name:'clients'}">
                         <i class="fa fa-users"></i>
                         Clientes

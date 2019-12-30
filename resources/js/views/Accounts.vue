@@ -86,7 +86,7 @@
                                             item-text="name"
                                             @search="onSearchCustomer"
                                             :error-message="errorMessageCustomer"
-                                            :successful="!!(!errorMessageCustomer && selectedCustomer)">
+                                            :successful="!!(!errorMessageCustomer && client)">
                                         <template slot="no-data">
                                             {{ noDataCustomer?"No se encontro el cliente.":"Ingrese el nombre del cliente"}}
                                         </template>

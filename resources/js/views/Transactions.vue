@@ -18,6 +18,18 @@
                                 {{ title.label }}
                             </th>
                         </thead>
+                        <tbody>
+                            <tr v-for="(transaction,i) in data.data">
+                                <td v-show="!hideAcount">{{ transaction.account_number }}</td>
+                                <td>
+                                    <span v-if="transaction.type==1">Retiro</span>
+                                    <span v-else>Consignación</span>
+                                </td>
+                                <td>{{ transaction.date }}</td>
+                                <td>${{ transaction.amount | numFormat('0,0[.]00') }}</td>
+                                <td>{{ transaction.description }}</td>
+                            </tr>
+                        </tbody>
                     </table>
                     <pagination
                             :data="data"
@@ -36,12 +48,90 @@
                 </template>
             </div>
         </div>
+        <!-- Modal -->
+        <div class="modal fade" id="modalTransactions" tabindex="-1" role="dialog" aria-labelledby="modalTransactionsTitle" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTransactionsTitle"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="#">
+                            <div class="form-group">
+                                <b>Cajero:</b>
+                            </div>
+                            <div class="form-group">
+                                <b>Numero de cuenta:</b>
+                                <template v-if="typeof this.$route.params.account_id != 'undefined'">
+                                    <input type="text" class="form-control " id="numero" placeholder="Numero de cuenta" name="nombre" v-model="account.number" v-validate="'required'" :class="{'is-invalid': errors.has('numero') && submitted }" readonly >
+                                    <span v-show="errors.has('numero')" class="invalid-feedback">{{ errors.first('numero') }}</span>
+                                </template>
+                                <template v-else>
+                                    <cool-select
+                                            :scrollItemsLim="10"
+                                            v-model="account"
+                                            :items="itemsAccount"
+                                            :loading="loadingAccount"
+                                            item-text="name"
+                                            @search="onSearchAccount"
+                                            :error-message="errorMessageAccount"
+                                            :successful="!!(!errorMessageAccount && account)">
+                                        <template slot="no-data">
+                                            {{ noDataAccount?"No se encontro el cliente.":"Ingrese el nombre del cliente"}}
+                                        </template>
+                                        <template #item="{ item }">
+                                            <div class="item">
+                                                <div>
+                                                    <span class="item-name"> {{ item.name }} </span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </cool-select>
+                                </template>
+                            </div>
+                            <div class="form-group">
+                                <b>Tipo:</b>
+                                <select name="tipo"  class="form-control " id="tipo"  v-model="transaction.type" v-validate="'required'" :class="{'is-invalid': errors.has('tipo') && submitted }">
+                                    <option value="">-Tipo-</option>
+                                    <option value="1">Retiro</option>
+                                    <option value="2">Consignación</option>
+                                </select>
+                                <span v-show="errors.has('tipo')" class="invalid-feedback">{{ errors.first('tipo') }}</span>
+                            </div>
+                            <div class="form-group">
+                                <b>Clave:</b>
+                                <input type="password" class="form-control " id="clave" placeholder="Clave" name="clave" v-model="transaction.clave" :class="{'is-invalid': errors.has('clave') && submitted }" v-validate="'required'"  length="4">
+                                <span v-show="errors.has('clave')" class="invalid-feedback">{{ errors.first('clave') }}</span>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                            <i class="fa fa-times"></i>
+                            Cerrar
+                        </button>
+                        <button type="button" class="btn btn-danger" @click="sendData">
+                            <i class="fa fa-save"></i>
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
+    import Swal from 'sweetalert2'
+    import { CoolSelect } from "vue-cool-select";
     export default {
         name: "Transactions",
+        components: {
+            CoolSelect
+        },
         data(){
             return {
                 loading:true,
@@ -52,15 +142,24 @@
                     {label:"Tipo",cols:1,checkShow:false},
                     {label:"Fecha",cols:1,checkShow:false},
                     {label:"Valor",cols:1,checkShow:false},
-                    {label:"Acciones",cols:3,checkShow:false}
+                    {label:"Descripción",cols:1,checkShow:false}
                 ],
                 account:{
                     id:0,
                     number:''
                 },
+                transaction:{
+                    type:""
+                },
                 data:{
                     data:{}
-                }
+                },
+
+                loadingAccount:false,
+                timeoutCustomerId: null,
+                noDataAccount: false,
+                itemsAccount:[],
+                errorMessageAccount: null
             }
         },
         mounted(){
@@ -98,7 +197,25 @@
                         createToastr("warning",message);
                     });
             },
+            clearData(){
+                /*this.account = {
+                    id:0,
+                    name:""
+                };*/
+            },
             addTransaction(){
+                this.clearData();
+                $("#modalTransactionsTitle").text("Generar transacción");
+                this.openModal(1);
+            },
+            openModal(){
+                this.submitted = false;
+                $("#modalTransactions").modal("show");
+            },
+            sendData(){
+
+            },
+            onSearchAccount(){
 
             }
         }

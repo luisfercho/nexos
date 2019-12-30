@@ -36,7 +36,7 @@ class TransactionsController extends Controller
             $transactions = Transaction::
             join('accounts', 'transactions.account_id', '=', 'accounts.id')
                 ->select([
-                    'accounts.number',
+                    'accounts.number as account_number',
                     'transactions.id',
                     'transactions.type',
                     'transactions.date',
