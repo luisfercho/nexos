@@ -3716,28 +3716,52 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "Login",
   data: function data() {
     return {
+      submitted: false,
       username: null,
       password: null,
-      error: null
+      error: null,
+      loading: false
     };
+  },
+  created: function created() {
+    if (this.$store.getters.loggedIn) {
+      this.$router.push({
+        name: "transactions"
+      });
+    }
   },
   methods: {
     login: function login() {
       var _this = this;
 
-      this.$store.dispatch("retrieveToken", {
-        username: this.username,
-        password: this.password
-      }).then(function (response) {
-        _this.$router.push({
-          name: "transactions"
-        });
-      })["catch"](function (error) {
-        _this.error = error.response.data;
+      this.loading = true;
+      this.submitted = true;
+      this.$validator.validateAll().then(function (result) {
+        if (result) {
+          _this.$store.dispatch("retrieveToken", {
+            username: _this.username,
+            password: _this.password
+          }).then(function (response) {
+            _this.loading = false;
+
+            _this.$router.push({
+              name: "transactions"
+            });
+          })["catch"](function (error) {
+            _this.loading = false;
+            _this.error = error.response.data;
+          });
+        } else {
+          _this.loading = false;
+        }
       });
     }
   }
@@ -60085,7 +60109,7 @@ var render = function() {
         { staticClass: "navbar navbar-expand-lg  navbar-dark bg-dark" },
         [
           _c("a", { staticClass: "navbar-brand", attrs: { href: "#" } }, [
-            _vm._v("\n        Nexos\n    ")
+            _vm._v("\n        Fast Transactions\n    ")
           ]),
           _vm._v(" "),
           _vm._m(0),
@@ -60216,7 +60240,7 @@ var render = function() {
                       [
                         _c("i", { staticClass: "fa fa-sign-out-alt" }),
                         _vm._v(
-                          "\n                    Cerrar session\n                "
+                          "\n                    Cerrar sesión\n                "
                         )
                       ]
                     )
@@ -62823,7 +62847,7 @@ var render = function() {
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
   return _c("div", [
-    _c("div", { staticClass: "card m-auto" }, [
+    _c("div", { staticClass: "card m-auto shadow " }, [
       _c("div", { staticClass: "card-body" }, [
         _c("h1", { staticClass: "title" }, [_vm._v("Login")]),
         _vm._v(" "),
@@ -62848,10 +62872,24 @@ var render = function() {
                       rawName: "v-model",
                       value: _vm.username,
                       expression: "username"
+                    },
+                    {
+                      name: "validate",
+                      rawName: "v-validate",
+                      value: "required|email",
+                      expression: "'required|email'"
                     }
                   ],
                   staticClass: "form-control",
-                  attrs: { type: "email", placeholder: "user@example.com" },
+                  class: {
+                    "is-invalid": _vm.errors.has("Email") && _vm.submitted
+                  },
+                  attrs: {
+                    type: "email",
+                    placeholder: "E-mail",
+                    name: "username",
+                    "data-vv-name": "Email"
+                  },
                   domProps: { value: _vm.username },
                   on: {
                     input: function($event) {
@@ -62861,7 +62899,23 @@ var render = function() {
                       _vm.username = $event.target.value
                     }
                   }
-                })
+                }),
+                _vm._v(" "),
+                _c(
+                  "span",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: _vm.errors.has("Email"),
+                        expression: "errors.has('Email')"
+                      }
+                    ],
+                    staticClass: "invalid-feedback"
+                  },
+                  [_vm._v(_vm._s(_vm.errors.first("Email")))]
+                )
               ])
             ]),
             _vm._v(" "),
@@ -62874,10 +62928,24 @@ var render = function() {
                       rawName: "v-model",
                       value: _vm.password,
                       expression: "password"
+                    },
+                    {
+                      name: "validate",
+                      rawName: "v-validate",
+                      value: "required",
+                      expression: "'required'"
                     }
                   ],
                   staticClass: "form-control",
-                  attrs: { type: "password" },
+                  class: {
+                    "is-invalid": _vm.errors.has("Contraseña") && _vm.submitted
+                  },
+                  attrs: {
+                    type: "password",
+                    placeholder: "Contraseña",
+                    name: "password",
+                    "data-vv-name": "Contraseña"
+                  },
                   domProps: { value: _vm.password },
                   on: {
                     input: function($event) {
@@ -62887,11 +62955,40 @@ var render = function() {
                       _vm.password = $event.target.value
                     }
                   }
-                })
+                }),
+                _vm._v(" "),
+                _c(
+                  "span",
+                  {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: _vm.errors.has("Contraseña"),
+                        expression: "errors.has('Contraseña')"
+                      }
+                    ],
+                    staticClass: "invalid-feedback"
+                  },
+                  [_vm._v(_vm._s(_vm.errors.first("Contraseña")))]
+                )
               ])
             ]),
             _vm._v(" "),
-            _vm._m(0)
+            _c(
+              "button",
+              {
+                staticClass: "btn btn-primary mt-2",
+                attrs: { type: "submit", disabled: _vm.loading ? true : false }
+              },
+              [
+                _c("i", { staticClass: "fa fa-sign-in-alt" }),
+                _vm._v(" "),
+                _vm.loading
+                  ? _c("span", [_vm._v("Iniciando sesión...")])
+                  : _c("span", [_vm._v("Iniciar sesión")])
+              ]
+            )
           ]
         ),
         _vm._v(" "),
@@ -62908,23 +63005,7 @@ var render = function() {
     ])
   ])
 }
-var staticRenderFns = [
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c(
-      "button",
-      { staticClass: "btn btn-primary mt-2", attrs: { type: "submit" } },
-      [
-        _c("i", { staticClass: "fa fa-sign-in-alt" }),
-        _vm._v(
-          "\n                        Iniciar sessión\n                    "
-        )
-      ]
-    )
-  }
-]
+var staticRenderFns = []
 render._withStripped = true
 
 
@@ -81642,6 +81723,11 @@ var router = new vue_router__WEBPACK_IMPORTED_MODULE_1__["default"]({
   mode: 'history',
   linkActiveClass: 'is-active',
   routes: [{
+    path: '/',
+    redirect: {
+      name: 'login'
+    }
+  }, {
     path: '/login',
     name: 'login',
     component: _views_Login__WEBPACK_IMPORTED_MODULE_3__["default"]

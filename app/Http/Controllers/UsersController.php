@@ -14,7 +14,7 @@ class UsersController extends Controller
 {
     public function index(Request $request){
 
-        $users = User::orderBy("id","DESC")->paginate(20);
+        $users = User::orderBy("name","ASC")->paginate(20);
 
         return response()->json(
             $users

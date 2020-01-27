@@ -19,6 +19,10 @@ const  router = new VueRouter({
     linkActiveClass: 'is-active',
     routes:[
         {
+            path:'/',
+            redirect:{name:'login'}
+        },
+        {
             path: '/login',
             name: 'login',
             component: Login,
